@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Automata Test</title>
+</head>
+
+<body style="margin : 0">
+	<script src="three.js"></script>
+	<script src="OrbitControls.js"></script>
+	<script src="jscolor.js"></script>
+	<script src="script.js"></script>
+	<br/>
+	<p1 id="cube_count"></p1>
+	<br/>
+	<p2 id="active_cube"></p2>
+	<br/>
+	<button onclick="add_cube()">Add Cube</button>
+	<button onclick="original_camera()">Original Camera</button>
+	<button onclick="scale_up()">Scale Up</button>
+	<button onclick="scale_down()">Scale Down</button>
+	<button onclick="default_size()">Default Size</button>
+	<button id="delete_cube_button" onclick="delete_active_cube()">Delete Active</button>
+	<button id="colour_picker" class="jscolor {valueElement:'chosen-value', onFineChange:'set_cube_colour(this)'}">Active Cube Colour Picker</button>
+</body>
+
+</html>
