@@ -1,0 +1,9 @@
+moving the active cube:
+
+key------action
+A--------left
+D--------right
+W--------up
+S--------down
+R--------in(z axis)
+F--------out(z axis)
