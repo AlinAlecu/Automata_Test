@@ -1,4 +1,7 @@
-moving the active cube:
+1.open index.html in internet browser of choice
+2.use buttons as intended
+3.if no active cube is selected, the last two buttons from the right are disabled
+4.moving the active cube:
 
 key------action
 A--------left
