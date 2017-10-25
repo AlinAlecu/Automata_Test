@@ -16,11 +16,11 @@ var scene_objects = 0;
 // total cubes added so far 
 var scene_objects_added = 0;
 
-var Previous_Cube_Clicked_Colour;
-var Previous_Cube_Clicked;
+var previous_cube_clicked_colour;
+var previous_cube_clicked;
 
 var mouse = { x: 0, y: 0 };
-var INTERSECTED;
+var intersected;
 // initialize object to perform world/screen calculations
 var projector = new THREE.Projector();
 
@@ -30,35 +30,32 @@ document.addEventListener("mousedown", onDocumentMouseDown, false);
 document.addEventListener("keydown", onDocumentKeyDown, false);
 
 function onDocumentKeyDown(event) {
-    if (Previous_Cube_Clicked) {
+    if (previous_cube_clicked) {
         var keyCode = event.which;
 
         // up
         if (keyCode == 87) {
-            Previous_Cube_Clicked.position.y += 1;
+            previous_cube_clicked.position.y += 1;
             // down
         } else if (keyCode == 83) {
-            Previous_Cube_Clicked.position.y -= 1;
+            previous_cube_clicked.position.y -= 1;
             // left
         } else if (keyCode == 65) {
-            Previous_Cube_Clicked.position.x -= 1;
+            previous_cube_clicked.position.x -= 1;
             // right
         } else if (keyCode == 68) {
-            Previous_Cube_Clicked.position.x += 1;
+            previous_cube_clicked.position.x += 1;
             // in
         } else if (keyCode == 82) {
-            Previous_Cube_Clicked.position.z -= 1;
+            previous_cube_clicked.position.z -= 1;
             // out
         } else if (keyCode == 70) {
-            Previous_Cube_Clicked.position.z += 1;
+            previous_cube_clicked.position.z += 1;
         }
     }
 }
 
 function add_cube() {
-    var RandomX = Math.random() * (window.innerWidth / 2);
-    var RandomY = Math.random() * (window.innerHeight / 2);
-
     var geometry = new THREE.BoxGeometry(1, 1, 1);
     var material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
     var cube = new THREE.Mesh(geometry, material);
@@ -73,30 +70,32 @@ function add_cube() {
     scene_objects++;
 
     cube.name = scene_objects_added;
+
+    return "added";
 }
 
 function delete_active_cube() {
-    if (Previous_Cube_Clicked) {
+    if (previous_cube_clicked) {
         var r = confirm("Are you sure you want to delete the active cube?");
 
         if (r == true) {
             document.getElementById("active_cube").innerHTML = "active cube = none";
 
-            scene.remove(Previous_Cube_Clicked);
+            scene.remove(previous_cube_clicked);
 
             scene_objects--;
 
-            Previous_Cube_Clicked = null;
+            previous_cube_clicked = null;
         }
     }
 }
 
 function set_cube_colour(picker) {
-    if (Previous_Cube_Clicked) {
+    if (previous_cube_clicked) {
         var hex = parseInt(picker.toString(), 16);
-        Previous_Cube_Clicked.material.color.setHex(hex);
-        Previous_Cube_Clicked.currentHex = hex;
-        Previous_Cube_Clicked_Colour = hex;
+        previous_cube_clicked.material.color.setHex(hex);
+        previous_cube_clicked.currentHex = hex;
+        previous_cube_clicked_colour = hex;
     }
 }
 
@@ -106,6 +105,9 @@ function original_camera() {
     camera.position.z = 5;
 
     controls.update();
+
+    // return current camera position
+    return Math.round(camera.position.x) + "," + Math.round(camera.position.y) + "," + Math.round(camera.position.z);
 }
 
 function animate() {
@@ -120,11 +122,11 @@ function disable_check(id) {
     if (document.getElementById(id)) {
         var button_color_picker = document.getElementById(id);
 
-        if (Previous_Cube_Clicked && button_color_picker.disabled == true) {
+        if (previous_cube_clicked && button_color_picker.disabled == true) {
             button_color_picker.disabled = false;
         }
         else {
-            if (!Previous_Cube_Clicked && button_color_picker.disabled == false) {
+            if (!previous_cube_clicked && button_color_picker.disabled == false) {
                 button_color_picker.disabled = true;
             }
         }
@@ -156,27 +158,27 @@ function calculate_intersection() {
     // if there is one (or more) intersections
     if (intersects.length > 0) {
         // if the closest object intersected is not the currently stored intersection object
-        if (intersects[0].object != INTERSECTED) {
+        if (intersects[0].object != intersected) {
             // restore previous intersection object (if it exists) to its original color
-            if (INTERSECTED)
-                INTERSECTED.material.color.setHex(INTERSECTED.currentHex);
+            if (intersected)
+                intersected.material.color.setHex(intersected.currentHex);
             // store reference to closest object as current intersection object
-            INTERSECTED = intersects[0].object;
-            if (Previous_Cube_Clicked != INTERSECTED)
+            intersected = intersects[0].object;
+            if (previous_cube_clicked != intersected)
                 // store color of closest object (for later restoration)
-                INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
+                intersected.currentHex = intersected.material.color.getHex();
             // set a new color for closest object
-            INTERSECTED.material.color.setHex(0xffff00);
+            intersected.material.color.setHex(0xffff00);
         }
     }
     else // there are no intersections
     {
         // restore previous intersection object (if it exists) to its original color
-        if (INTERSECTED)
-            INTERSECTED.material.color.setHex(INTERSECTED.currentHex);
+        if (intersected)
+            intersected.material.color.setHex(intersected.currentHex);
         // remove previous intersection object reference
         //     by setting current intersection object to "nothing"
-        INTERSECTED = null;
+        intersected = null;
     }
 }
 
@@ -186,21 +188,48 @@ function onWindowResize() {
 }
 
 function scale_up() {
+    var new_length; 
+    var to_add = 0.1
+
     scene.traverse(function (object) {
-        object.scale.set(object.scale.x + 0.1, object.scale.y + 0.1, object.scale.z + 0.1);
+
+
+        object.scale.set(object.scale.x + to_add, object.scale.y + to_add, object.scale.z + to_add);
+        if( new_length != object.scale.x ){
+            new_length = object.scale.x
+        }
     });
+
+    return new_length;
 }
 
 function scale_down() {
+    var new_length; 
+    var to_subtract = 0.1
+
     scene.traverse(function (object) {
-        object.scale.set(object.scale.x - 0.1, object.scale.y - 0.1, object.scale.z - 0.1);
+        object.scale.set(object.scale.x - to_subtract, object.scale.y - to_subtract, object.scale.z - to_subtract);
+
+        if( new_length != object.scale.x ){
+            new_length = object.scale.x
+        }
     });
+
+    return new_length;
 }
 
 function default_size() {
+    var new_value;
+
     scene.traverse(function (object) {
         object.scale.set(1, 1, 1);
+
+        if(new_value != object.scale.x){
+            new_value = object.scale.x;
+        }
     });
+
+    return new_value;
 }
 
 function onDocumentMouseMove(event) {
@@ -211,24 +240,24 @@ function onDocumentMouseMove(event) {
 
 function onDocumentMouseDown(event) {
 
-    if (INTERSECTED) {
+    if (intersected) {
 
         if (document.getElementById("active_cube"))
-            document.getElementById("active_cube").innerHTML = "active cube = " + INTERSECTED.name;
+            document.getElementById("active_cube").innerHTML = "active cube = " + intersected.name;
 
-        if (Previous_Cube_Clicked) {
-            Previous_Cube_Clicked.material.color.setHex(Previous_Cube_Clicked_Colour);
+        if (previous_cube_clicked) {
+            previous_cube_clicked.material.color.setHex(previous_cube_clicked_colour);
         }
 
         // save details for new one
-        if( INTERSECTED !=  Previous_Cube_Clicked){
-            Previous_Cube_Clicked_Colour = INTERSECTED.currentHex;
-            Previous_Cube_Clicked = INTERSECTED;
+        if( intersected !=  previous_cube_clicked){
+            previous_cube_clicked_colour = intersected.currentHex;
+            previous_cube_clicked = intersected;
         }
 
         // set a new color for clicked object
-        INTERSECTED.material.color.setHex(0xff0000);
-        INTERSECTED.currentHex = 0xff0000;
+        intersected.material.color.setHex(0xff0000);
+        intersected.currentHex = 0xff0000;
     }
 }
 
